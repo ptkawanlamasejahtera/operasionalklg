@@ -449,6 +449,11 @@
   <button class="nav-btn" data-view="armada" onclick="goTo('armada')"><span class="ic">🚙</span>Armada&nbsp;&amp;&nbsp;Driver</button>
 </div>
 
+<iframe name="hidden-submit-frame" style="display:none;"></iframe>
+<form id="hidden-submit-form" method="POST" target="hidden-submit-frame" style="display:none;">
+  <input type="hidden" name="payload" id="hidden-submit-payload">
+</form>
+
 <div id="toast"></div>
 
 <script>
@@ -459,6 +464,19 @@
     { name: 'Jemi Nuryanti', phone: '6282124705643', email: 'jemi.nuryanti@kawanlamacorp.com' },
     { name: 'Risa', phone: '6282297829248', email: 'khomisunur.iriani@kawanlamacorp.com' }
   ];
+
+  /** Submit POST lewat hidden iframe form (bukan fetch) supaya tidak kena 401
+   *  akibat pembatasan cross-origin credential pada deployment Apps Script
+   *  yang terikat akun Google Workspace. */
+  function submitViaIframe(payload){
+    return new Promise((resolve)=>{
+      const form = document.getElementById('hidden-submit-form');
+      form.action = SCRIPT_URL;
+      document.getElementById('hidden-submit-payload').value = JSON.stringify(payload);
+      form.submit();
+      setTimeout(resolve, 1200);
+    });
+  }
 
   let STATE = { requests: [], armada: [] };
   let openGroups = { 'Menunggu': true, 'Ditugaskan': false, 'Berjalan': false, 'Selesai': false };
@@ -742,7 +760,7 @@
 
   async function postAction(payload, successMsg){
     try{
-      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      await submitViaIframe(payload);
       showToast('✓ ' + successMsg, 'success');
       setTimeout(loadData, 900);
     }catch(err){
@@ -817,15 +835,12 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Mengirim…';
     try{
-      const controller = new AbortController();
-      const timeoutId = setTimeout(()=>controller.abort(), 25000);
-      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload), signal: controller.signal });
-      clearTimeout(timeoutId);
+      await submitViaIframe(payload);
       showSuccessPanel(ticketId, { nama: namaVal, departemen: departemenVal, tanggal: tanggalVal, jam: jamVal, jamPulang: jamPulangVal, lokasi: lokasiVal, tujuan: tujuanVal, keperluan: keperluanVal });
       resetForm();
       loadData();
     }catch(err){
-      showToast(err.name==='AbortError' ? 'Timeout. Coba lagi!' : 'Gagal mengirim.', 'error');
+      showToast('Gagal mengirim. Cek koneksi.', 'error');
     }finally{
       btn.disabled = false;
       btn.innerHTML = 'Kirim Request';
