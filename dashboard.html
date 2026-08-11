@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Operasional KLG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E121A;
+    --card:#171C26;
+    --card-2:#1D2330;
+    --line:#262D3A;
+    --text:#F1F3F7;
+    --text-dim:#8A93A3;
+    --text-faint:#5C6474;
+    --orange:#F2913D;
+    --orange-dim:rgba(242,145,61,0.14);
+    --blue:#5B93F5;
+    --blue-dim:rgba(91,147,245,0.14);
+    --purple:#9B7BF0;
+    --purple-dim:rgba(155,123,240,0.14);
+    --green:#3ECF8E;
+    --green-dim:rgba(62,207,142,0.14);
+    --red:#F0645B;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:430px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:78px;}
+
+  /* ---- header ---- */
+  .topbar{
+    display:flex;align-items:center;gap:12px;
+    padding:18px 18px 14px;
+  }
+  .logo{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(150deg,var(--orange),#D9711F);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;flex-shrink:0;
+  }
+  .topbar h1{font-size:15.5px;font-weight:700;margin:0;letter-spacing:.01em;}
+  .topbar p{font-size:11.5px;color:var(--text-dim);margin:2px 0 0;}
+
+  .view{display:none;padding:0 16px;}
+  .view.active{display:block;}
+
+  /* ---- stat cards ---- */
+  .stats-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
+  }
+  .stat-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 14px 13px;
+  }
+  .stat-icon{
+    width:30px;height:30px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;margin-bottom:10px;
+  }
+  .stat-icon.orange{background:var(--orange-dim);color:var(--orange);}
+  .stat-icon.blue{background:var(--blue-dim);color:var(--blue);}
+  .stat-icon.green{background:var(--green-dim);color:var(--green);}
+  .stat-icon.purple{background:var(--purple-dim);color:var(--purple);}
+  .stat-num{font-size:24px;font-weight:800;line-height:1;margin-bottom:5px;}
+  .stat-label{font-size:11.5px;color:var(--text-dim);font-weight:500;}
+
+  /* ---- section card ---- */
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+  }
+  .panel-title{
+    font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--text-dim);margin:0 0 13px;
+  }
+
+  /* distribution bar */
+  .dist-bar{height:9px;border-radius:6px;overflow:hidden;display:flex;background:var(--card-2);margin-bottom:12px;}
+  .dist-bar span{height:100%;}
+  .dist-legend{display:flex;flex-direction:column;gap:9px;}
+  .dist-row{display:flex;align-items:center;font-size:12.5px;}
+  .dist-dot{width:8px;height:8px;border-radius:50%;margin-right:9px;flex-shrink:0;}
+  .dist-row .lbl{flex:1;color:var(--text-dim);}
+  .dist-row .val{font-weight:700;color:var(--text);}
+
+  /* armada list */
+  .armada-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 0;border-bottom:1px solid var(--line);
+  }
+  .armada-item:last-child{border-bottom:none;padding-bottom:0;}
+  .armada-item:first-child{padding-top:0;}
+  .armada-plate{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;font-weight:600;
+    background:var(--card-2);
+    padding:5px 9px;border-radius:6px;
+    margin-right:10px;
+  }
+  .armada-info{flex:1;display:flex;align-items:center;min-width:0;}
+  .armada-jenis{font-size:13px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .badge{
+    font-size:10.5px;font-weight:700;letter-spacing:.03em;
+    padding:5px 10px;border-radius:20px;flex-shrink:0;
+  }
+  .badge.tersedia{background:var(--green-dim);color:var(--green);}
+  .badge.dipakai{background:var(--orange-dim);color:var(--orange);}
+
+  /* dispatch board */
+  .board-header{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:4px 0 12px;
+  }
+  .board-header h2{font-size:14px;font-weight:700;margin:0;}
+  .btn-new{
+    background:var(--orange);color:#1A0E04;border:none;border-radius:9px;
+    padding:9px 14px;font-size:12.5px;font-weight:700;
+    display:flex;align-items:center;gap:6px;cursor:pointer;
+  }
+
+  .status-group{
+    border:1px solid var(--line);border-radius:var(--radius);
+    margin-bottom:10px;overflow:hidden;background:var(--card);
+  }
+  .status-group-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:13px 15px;cursor:pointer;
+  }
+  .status-group-head .left{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;}
+  .status-group-head .dot{width:8px;height:8px;border-radius:50%;}
+  .status-group-head .count{
+    font-size:11px;color:var(--text-dim);font-weight:500;
+  }
+  .chev{color:var(--text-faint);font-size:11px;transition:transform .15s;}
+  .status-group.open .chev{transform:rotate(180deg);}
+  .status-group-body{display:none;padding:0 15px 15px;}
+  .status-group.open .status-group-body{display:block;}
+  .empty-body{font-size:12.5px;color:var(--text-faint);padding:2px 0 4px;}
+
+  .trip-card{
+    background:var(--card-2);border:1px solid var(--line);
+    border-radius:11px;padding:13px 14px;margin-top:2px;
+  }
+  .trip-card + .trip-card{margin-top:10px;}
+  .trip-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+  .trip-name{font-size:13.5px;font-weight:700;}
+  .trip-ticket{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-faint);}
+  .trip-badge{
+    font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;
+  }
+  .trip-row{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text-dim);margin-bottom:5px;line-height:1.4;}
+  .trip-row:last-of-type{margin-bottom:0;}
+  .trip-actions{margin-top:11px;display:flex;gap:8px;}
+  .trip-actions button{
+    flex:1;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;
+  }
+  .btn-assign{background:var(--blue);color:#fff;}
+  .btn-progress{background:var(--purple);color:#fff;}
+  .btn-done{background:var(--green);color:#08251A;}
+
+  .assign-box{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);}
+  .assign-box select, .assign-box input{
+    width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    border-radius:7px;padding:9px 10px;font-size:12.5px;margin-bottom:8px;font-family:'Inter',sans-serif;
+  }
+  .assign-box button{
+    width:100%;background:var(--blue);color:#fff;border:none;border-radius:8px;
+    padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;
+  }
+
+  /* ---- bottom nav ---- */
+  .bottomnav{
+    position:fixed;left:0;right:0;bottom:0;
+    max-width:430px;margin:0 auto;
+    background:#11151F;border-top:1px solid var(--line);
+    display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index:50;
+  }
+  .nav-btn{
+    flex:1;background:none;border:none;color:var(--text-faint);
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-size:8.8px;font-weight:600;padding:6px 1px;cursor:pointer;
+    line-height:1.15;text-align:center;
+  }
+  .nav-btn .ic{font-size:16px;}
+  .nav-btn.active{color:var(--orange);}
+
+  /* ---- request form (dark) ---- */
+  .form-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--text-dim);margin-bottom:6px;}
+  .field label .req{color:var(--red);}
+  .field input, .field textarea{
+    width:100%;background:var(--card-2);border:1.5px solid var(--line);color:var(--text);
+    border-radius:8px;padding:11px 12px;font-size:14.5px;font-family:'Inter',sans-serif;
+  }
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--orange);}
+  .field textarea{resize:vertical;min-height:60px;}
+  .toggle-group{display:flex;flex-wrap:wrap;gap:8px;}
+  .toggle-btn{
+    flex:1 1 auto;min-width:78px;text-align:center;padding:10px;border-radius:8px;
+    border:1.5px solid var(--line);background:var(--card-2);font-size:13px;font-weight:600;
+    color:var(--text-dim);cursor:pointer;
+  }
+  .toggle-btn.active{background:var(--orange);border-color:var(--orange);color:#1A0E04;}
+  .stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:8px;overflow:hidden;}
+  .stepper button{width:42px;height:42px;border:none;background:var(--card-2);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;}
+  .stepper input{flex:1;border:none;background:transparent;text-align:center;color:var(--text);font-size:15px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+  #submit-btn{
+    width:100%;padding:15px;border:none;border-radius:10px;background:var(--orange);color:#1A0E04;
+    font-size:15px;font-weight:800;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
+  }
+  #submit-btn:disabled{opacity:.6;}
+  .field.invalid input,.field.invalid textarea{border-color:var(--red);}
+  .spinner{width:15px;height:15px;border:2.5px solid rgba(0,0,0,0.25);border-top-color:#1A0E04;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* riwayat table */
+  .riwayat-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px;}
+  .riwayat-top{display:flex;justify-content:space-between;margin-bottom:6px;}
+  .riwayat-top .nm{font-size:13.5px;font-weight:700;}
+  .riwayat-top .tk{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-faint);}
+  .riwayat-meta{font-size:12px;color:var(--text-dim);line-height:1.5;}
+
+  #toast{
+    position:fixed;left:50%;bottom:-80px;transform:translateX(-50%);
+    background:var(--card-2);border:1px solid var(--line);color:#fff;padding:12px 18px;border-radius:9px;
+    font-size:13.5px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,0.4);transition:bottom .3s ease;z-index:999;max-width:88vw;
+  }
+  #toast.show{bottom:88px;}
+  #toast.success{border-color:var(--green);}
+  #toast.error{border-color:var(--red);}
+
+  .btn-wa{
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    background:#25D366;color:#0A2E17;border:none;border-radius:10px;
+    padding:13px;font-size:13.5px;font-weight:700;cursor:pointer;text-decoration:none;
+  }
+  .loading-row{text-align:center;color:var(--text-faint);font-size:12.5px;padding:20px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="logo">🚐</div>
+    <div>
+      <h1 id="app-title">OPERASIONAL KLG</h1>
+      <p id="app-subtitle">Operasional Armada</p>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div class="view active" id="view-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon orange">📋</div>
+        <div class="stat-num" id="stat-hari-ini">0</div>
+        <div class="stat-label">Trip Hari Ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">⏱</div>
+        <div class="stat-num" id="stat-menunggu">0</div>
+        <div class="stat-label">Menunggu Assign</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple">➤</div>
+        <div class="stat-num" id="stat-berjalan">0</div>
+        <div class="stat-label">Sedang Berjalan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">🚚</div>
+        <div class="stat-num" id="stat-armada">0/0</div>
+        <div class="stat-label">Armada Tersedia</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Sebaran Status Trip</p>
+      <div class="dist-bar" id="dist-bar"></div>
+      <div class="dist-legend" id="dist-legend"></div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Status Armada</p>
+      <div id="armada-list"><div class="loading-row">Memuat…</div></div>
+    </div>
+
+    <div class="board-header">
+      <h2>Papan Dispatch</h2>
+      <button class="btn-new" onclick="goTo('request')">＋ Request Baru</button>
+    </div>
+    <div id="dispatch-board"><div class="loading-row">Memuat…</div></div>
+  </div>
+
+  <!-- ================= REQUEST FORM ================= -->
+  <div class="view" id="view-request">
+    <div class="form-card">
+      <div class="field">
+        <label>Nama Pemohon <span class="req">*</span></label>
+        <input type="text" id="f-nama" placeholder="Nama lengkap">
+      </div>
+      <div class="field">
+        <label>Departemen / Divisi <span class="req">*</span></label>
+        <input type="text" id="f-departemen" placeholder="Cth: Operasional">
+      </div>
+      <div class="field">
+        <label>No. HP / Kontak <span class="req">*</span></label>
+        <input type="tel" id="f-kontak" placeholder="08xx-xxxx-xxxx">
+      </div>
+      <div class="field">
+        <label>Tanggal Penggunaan <span class="req">*</span></label>
+        <input type="date" id="f-tanggal">
+      </div>
+      <div class="field">
+        <label>Jam Penjemputan <span class="req">*</span></label>
+        <input type="time" id="f-jam">
+      </div>
+      <div class="field">
+        <label>Jam Pulang <span class="req">*</span></label>
+        <input type="time" id="f-jam-pulang">
+      </div>
+      <div class="field">
+        <label>Tipe Perjalanan <span class="req">*</span></label>
+        <div class="toggle-group" id="f-tipe-group">
+          <div class="toggle-btn" data-value="Sekali Jalan">Sekali Jalan</div>
+          <div class="toggle-btn" data-value="Pulang-Pergi">Pulang–Pergi</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Titik Jemput <span class="req">*</span></label>
+        <input type="text" id="f-lokasi" placeholder="Lokasi awal">
+      </div>
+      <div class="field">
+        <label>Tujuan <span class="req">*</span></label>
+        <input type="text" id="f-tujuan" placeholder="Lokasi tujuan">
+      </div>
+      <div class="field">
+        <label>Keperluan <span class="req">*</span></label>
+        <textarea id="f-keperluan" placeholder="Agenda perjalanan"></textarea>
+      </div>
+      <div class="field">
+        <label>Jenis Kendaraan</label>
+        <input type="text" value="Mobil Operasional" disabled style="opacity:.7;">
+      </div>
+      <div class="field">
+        <label>Jumlah Penumpang <span class="req">*</span></label>
+        <div class="stepper">
+          <button type="button" onclick="stepQty(-1)">−</button>
+          <input type="text" id="f-jumlah" value="1" readonly>
+          <button type="button" onclick="stepQty(1)">+</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>Catatan Tambahan</label>
+        <textarea id="f-catatan" placeholder="Opsional"></textarea>
+      </div>
+    </div>
+    <button id="submit-btn" onclick="submitRequest()">Kirim Request</button>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- ================= SUCCESS PANEL ================= -->
+  <div class="view" id="view-success">
+    <div class="panel" style="text-align:center;padding:26px 18px;">
+      <div style="font-size:34px;margin-bottom:8px;">✅</div>
+      <h2 style="font-size:16px;margin:0 0 4px;">Request Terkirim</h2>
+      <p style="font-size:12.5px;color:var(--text-dim);margin:0 0 4px;">Tiket <b id="success-ticket" style="color:var(--text);font-family:'IBM Plex Mono',monospace;"></b></p>
+      <p style="font-size:12px;color:var(--text-faint);margin:0;">Email notifikasi sudah otomatis terkirim ke PIC.<br>Tap tombol di bawah untuk kirim juga via WhatsApp.<br>Simpan No. Tiket ini — cek status penjadwalan armada &amp; driver kapan saja lewat menu "Cek Status".</p>
+    </div>
+    <div class="panel" id="success-wa-buttons" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <button id="success-done-btn" onclick="finishSuccess()" style="width:100%;padding:14px;border:none;border-radius:10px;background:var(--card-2);border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;">Selesai, Kembali ke Dashboard</button>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- ================= CEK STATUS ================= -->
+  <div class="view" id="view-status">
+    <div class="panel">
+      <p class="panel-title">Cek Status Request</p>
+      <div class="field" style="margin-bottom:10px;">
+        <label>Masukkan No. Tiket</label>
+        <input type="text" id="status-ticket-input" placeholder="Cth: TRX-123456" style="text-transform:uppercase;">
+      </div>
+      <button onclick="cekStatus()" style="width:100%;padding:12px;border:none;border-radius:9px;background:var(--orange);color:#1A0E04;font-size:13.5px;font-weight:700;cursor:pointer;">Cari Request</button>
+    </div>
+    <div id="status-result"></div>
+  </div>
+
+  <!-- ================= RIWAYAT ================= -->
+  <div class="view" id="view-riwayat">
+    <div class="panel" style="padding-top:14px;padding-bottom:2px;margin-bottom:14px;">
+      <p class="panel-title" style="margin-bottom:0;">Riwayat Trip</p>
+    </div>
+    <div id="riwayat-list"><div class="loading-row">Memuat…</div></div>
+  </div>
+
+  <!-- ================= PAPAN FLEET ================= -->
+  <div class="view" id="view-fleet">
+    <div class="panel">
+      <p class="panel-title">Tersedia</p>
+      <div id="fleet-tersedia"><div class="loading-row">Memuat…</div></div>
+    </div>
+    <div class="panel">
+      <p class="panel-title">Sedang Dipakai</p>
+      <div id="fleet-dipakai"><div class="loading-row">Memuat…</div></div>
+    </div>
+  </div>
+
+  <!-- ================= ARMADA & DRIVER ================= -->
+  <div class="view" id="view-armada">
+    <div class="panel">
+      <p class="panel-title">Semua Armada</p>
+      <div id="armada-detail-list"><div class="loading-row">Memuat…</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottomnav">
+  <button class="nav-btn active" data-view="dashboard" onclick="goTo('dashboard')"><span class="ic">📊</span>Dashboard</button>
+  <button class="nav-btn" data-view="request" onclick="goTo('request')"><span class="ic">➕</span>Request Baru</button>
+  <button class="nav-btn" data-view="status" onclick="goTo('status')"><span class="ic">🔍</span>Cek Status</button>
+  <button class="nav-btn" data-view="riwayat" onclick="goTo('riwayat')"><span class="ic">🕘</span>Riwayat</button>
+  <button class="nav-btn" data-view="fleet" onclick="goTo('fleet')"><span class="ic">🗺️</span>Papan Fleet</button>
+  <button class="nav-btn" data-view="armada" onclick="goTo('armada')"><span class="ic">🚙</span>Armada&nbsp;&amp;&nbsp;Driver</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  /* ======================= CONFIG ======================= */
+  const SCRIPT_URL = 'https://script.google.com/a/macros/kawanlamacorp.com/s/AKfycbxskwRp-9M3Uv1W16M34j8wHg2H9r96mFMzUjhJD6GhZ-wCKhZwHa7QkMdMr4y0flw3/exec';
+
+  const PIC_LIST = [
+    { name: 'Jemi Nuryanti', phone: '6282124705643', email: 'jemi.nuryanti@kawanlamacorp.com' },
+    { name: 'Risa', phone: '6282297829248', email: 'khomisunur.iriani@kawanlamacorp.com' }
+  ];
+
+  let STATE = { requests: [], armada: [] };
+  let openGroups = { 'Menunggu': true, 'Ditugaskan': false, 'Berjalan': false, 'Selesai': false };
+  let assignOpenTicket = null;
+
+  const STATUS_COLORS = {
+    'Menunggu': 'var(--orange)',
+    'Ditugaskan': 'var(--blue)',
+    'Berjalan': 'var(--purple)',
+    'Selesai': 'var(--green)'
+  };
+  const STATUS_DIM = {
+    'Menunggu': 'var(--orange-dim)',
+    'Ditugaskan': 'var(--blue-dim)',
+    'Berjalan': 'var(--purple-dim)',
+    'Selesai': 'var(--green-dim)'
+  };
+  const STATUS_ORDER = ['Menunggu','Ditugaskan','Berjalan','Selesai'];
+
+  /* ======================= NAV ======================= */
+  function goTo(view){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+view).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+    window.scrollTo(0,0);
+  }
+
+  /* ======================= JSONP LOAD ======================= */
+  function loadData(){
+    const cbName = 'jsonpCb_' + Date.now();
+    window[cbName] = function(data){
+      STATE = data;
+      renderAll();
+      delete window[cbName];
+      script.remove();
+    };
+    const script = document.createElement('script');
+    script.src = SCRIPT_URL + '?callback=' + cbName;
+    script.onerror = function(){
+      document.querySelectorAll('.loading-row').forEach(el=>el.textContent = 'Gagal memuat data. Cek koneksi.');
+    };
+    document.body.appendChild(script);
+  }
+
+  /* ======================= RENDER ======================= */
+  function renderAll(){
+    renderStats();
+    renderDistribution();
+    renderArmadaList();
+    renderDispatchBoard();
+    renderRiwayat();
+    renderFleet();
+    renderArmadaDetail();
+  }
+
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function renderStats(){
+    const reqs = STATE.requests || [];
+    const today = todayStr();
+    const hariIni = reqs.filter(r => r['Tanggal'] === today).length;
+    const menunggu = reqs.filter(r => r['Status'] === 'Menunggu').length;
+    const berjalan = reqs.filter(r => r['Status'] === 'Berjalan').length;
+    const armada = STATE.armada || [];
+    const tersedia = armada.filter(a => a['Status'] === 'Tersedia').length;
+
+    document.getElementById('stat-hari-ini').textContent = hariIni;
+    document.getElementById('stat-menunggu').textContent = menunggu;
+    document.getElementById('stat-berjalan').textContent = berjalan;
+    document.getElementById('stat-armada').textContent = tersedia + '/' + armada.length;
+  }
+
+  function renderDistribution(){
+    const reqs = STATE.requests || [];
+    const total = reqs.length || 1;
+    const bar = document.getElementById('dist-bar');
+    const legend = document.getElementById('dist-legend');
+    bar.innerHTML = '';
+    legend.innerHTML = '';
+    STATUS_ORDER.forEach(status=>{
+      const count = reqs.filter(r=>r['Status']===status).length;
+      const pct = (count/total*100);
+      const seg = document.createElement('span');
+      seg.style.width = pct + '%';
+      seg.style.background = STATUS_COLORS[status];
+      if(count>0) bar.appendChild(seg);
+
+      const row = document.createElement('div');
+      row.className = 'dist-row';
+      row.innerHTML = '<span class="dist-dot" style="background:'+STATUS_COLORS[status]+'"></span>'+
+                       '<span class="lbl">'+status+'</span><span class="val">'+count+'</span>';
+      legend.appendChild(row);
+    });
+  }
+
+  function renderArmadaList(){
+    const armada = STATE.armada || [];
+    const el = document.getElementById('armada-list');
+    if(armada.length === 0){ el.innerHTML = '<div class="empty-body">Belum ada data armada.</div>'; return; }
+    el.innerHTML = armada.map(a=>{
+      const badgeClass = a['Status']==='Tersedia' ? 'tersedia' : 'dipakai';
+      return '<div class="armada-item">'+
+        '<div class="armada-info"><span class="armada-plate">'+esc(a['No Polisi']||a['Kode']||'')+'</span>'+
+        '<span class="armada-jenis">'+esc(a['Jenis']||'')+'</span></div>'+
+        '<span class="badge '+badgeClass+'">'+esc((a['Status']||'').toUpperCase())+'</span></div>';
+    }).join('');
+  }
+
+  function renderDispatchBoard(){
+    const reqs = (STATE.requests || []).slice().reverse();
+    const el = document.getElementById('dispatch-board');
+    el.innerHTML = STATUS_ORDER.map(status=>{
+      const items = reqs.filter(r=>r['Status']===status);
+      const isOpen = openGroups[status];
+      return '<div class="status-group '+(isOpen?'open':'')+'" data-status="'+status+'">'+
+        '<div class="status-group-head" onclick="toggleGroup(\''+status+'\')">'+
+          '<div class="left"><span class="dot" style="background:'+STATUS_COLORS[status]+'"></span>'+status+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;"><span class="count">'+items.length+' trip</span><span class="chev">▾</span></div>'+
+        '</div>'+
+        '<div class="status-group-body">'+
+          (items.length===0 ? '<div class="empty-body">Tidak ada trip.</div>' : items.map(r=>renderTripCard(r, status)).join('')) +
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function renderTripCard(r, status){
+    const ticket = r['Ticket ID'];
+    const badgeStyle = 'background:'+STATUS_DIM[status]+';color:'+STATUS_COLORS[status]+';';
+    let actions = '';
+    if(status === 'Menunggu'){
+      actions = '<div class="trip-actions"><button class="btn-assign" onclick="toggleAssign(\''+ticket+'\')">Assign Armada</button></div>';
+      if(assignOpenTicket === ticket){
+        const available = (STATE.armada||[]).filter(a=>a['Status']==='Tersedia');
+        actions += '<div class="assign-box">'+
+          '<select id="assign-armada-'+ticket+'">'+
+            (available.length? available.map(a=>'<option value="'+esc(a['Kode'])+'">'+esc(a['No Polisi']||a['Kode'])+' — '+esc(a['Jenis']||'')+'</option>').join('') : '<option value="">Tidak ada armada tersedia</option>')+
+          '</select>'+
+          '<input type="text" id="assign-driver-'+ticket+'" placeholder="Nama driver">'+
+          '<button onclick="confirmAssign(\''+ticket+'\')">Konfirmasi Assign</button>'+
+        '</div>';
+      }
+    } else if(status === 'Ditugaskan'){
+      actions = '<div class="trip-actions"><button class="btn-progress" onclick="advanceStatus(\''+ticket+'\',\'Berjalan\')">Mulai Jalan</button>'+
+        '<button class="btn-wa" style="flex:1;padding:9px;font-size:12px;" onclick="notifyRequester(\''+ticket+'\')">📤 Notify</button></div>';
+    } else if(status === 'Berjalan'){
+      actions = '<div class="trip-actions"><button class="btn-done" onclick="advanceStatus(\''+ticket+'\',\'Selesai\')">Selesai</button>'+
+        '<button class="btn-wa" style="flex:1;padding:9px;font-size:12px;" onclick="notifyRequester(\''+ticket+'\')">📤 Notify</button></div>';
+    }
+
+    return '<div class="trip-card">'+
+      '<div class="trip-top"><div><div class="trip-name">'+esc(r['Nama']||'')+'</div>'+
+        '<div class="trip-ticket">'+esc(ticket)+' · '+esc(r['Kontak']||'')+'</div></div>'+
+        '<span class="trip-badge" style="'+badgeStyle+'">'+status.toUpperCase()+'</span></div>'+
+      '<div class="trip-row">📍 '+esc(r['Lokasi Awal']||'')+' → '+esc(r['Tujuan']||'')+'</div>'+
+      '<div class="trip-row">🕒 '+esc(r['Tanggal']||'')+' · berangkat '+esc(r['Jam']||'')+' · pulang '+esc(r['Jam Pulang']||'-')+'</div>'+
+      '<div class="trip-row">👥 '+esc(r['Jumlah Penumpang']||'')+' penumpang · '+esc(r['Jenis Kendaraan']||'')+'</div>'+
+      (r['Armada Assigned'] ? '<div class="trip-row">🚐 '+esc(r['Armada Assigned'])+(r['Driver']?' · '+esc(r['Driver']):'')+'</div>' : '')+
+      actions+
+    '</div>';
+  }
+
+  function renderRiwayat(){
+    const reqs = (STATE.requests || []).slice().reverse();
+    const el = document.getElementById('riwayat-list');
+    if(reqs.length===0){ el.innerHTML = '<div class="loading-row">Belum ada trip.</div>'; return; }
+    el.innerHTML = reqs.map(r=>{
+      return '<div class="riwayat-item"><div class="riwayat-top"><span class="nm">'+esc(r['Nama']||'')+'</span><span class="tk">'+esc(r['Ticket ID']||'')+'</span></div>'+
+        '<div class="riwayat-meta">'+esc(r['Lokasi Awal']||'')+' → '+esc(r['Tujuan']||'')+'<br>'+
+        esc(r['Tanggal']||'')+' · '+esc(r['Jam']||'')+' · Status: <b style="color:'+STATUS_COLORS[r['Status']]+'">'+esc(r['Status']||'')+'</b></div></div>';
+    }).join('');
+  }
+
+  function renderFleet(){
+    const armada = STATE.armada || [];
+    const tersedia = armada.filter(a=>a['Status']==='Tersedia');
+    const dipakai = armada.filter(a=>a['Status']!=='Tersedia');
+    document.getElementById('fleet-tersedia').innerHTML = tersedia.length ?
+      tersedia.map(fleetRow).join('') : '<div class="empty-body">Tidak ada armada tersedia.</div>';
+    document.getElementById('fleet-dipakai').innerHTML = dipakai.length ?
+      dipakai.map(fleetRow).join('') : '<div class="empty-body">Tidak ada armada sedang dipakai.</div>';
+  }
+
+  function fleetRow(a){
+    const badgeClass = a['Status']==='Tersedia' ? 'tersedia' : 'dipakai';
+    return '<div class="armada-item"><div class="armada-info"><span class="armada-plate">'+esc(a['No Polisi']||a['Kode']||'')+'</span>'+
+      '<span class="armada-jenis">'+esc(a['Jenis']||'')+'</span></div><span class="badge '+badgeClass+'">'+esc((a['Status']||'').toUpperCase())+'</span></div>';
+  }
+
+  function renderArmadaDetail(){
+    const armada = STATE.armada || [];
+    const reqs = STATE.requests || [];
+    const el = document.getElementById('armada-detail-list');
+    if(armada.length===0){ el.innerHTML = '<div class="empty-body">Belum ada data armada. Tambahkan di sheet "Armada".</div>'; return; }
+    el.innerHTML = armada.map(a=>{
+      const active = reqs.find(r => r['Armada Assigned']===a['Kode'] && (r['Status']==='Ditugaskan'||r['Status']==='Berjalan'));
+      return '<div class="armada-item"><div class="armada-info"><span class="armada-plate">'+esc(a['No Polisi']||a['Kode']||'')+'</span>'+
+        '<span class="armada-jenis">'+esc(a['Jenis']||'')+(active?' · Driver: '+esc(active['Driver']||'-'):'')+'</span></div>'+
+        '<span class="badge '+(a['Status']==='Tersedia'?'tersedia':'dipakai')+'">'+esc((a['Status']||'').toUpperCase())+'</span></div>';
+    }).join('');
+  }
+
+  function cekStatus(){
+    const input = document.getElementById('status-ticket-input').value.trim().toUpperCase();
+    const box = document.getElementById('status-result');
+    if(!input){ box.innerHTML = ''; return; }
+    const r = (STATE.requests||[]).find(req => String(req['Ticket ID']||'').toUpperCase() === input);
+    if(!r){
+      box.innerHTML = '<div class="panel"><div class="empty-body">Tiket tidak ditemukan. Cek kembali nomor tiketnya.</div></div>';
+      return;
+    }
+    const status = r['Status'] || 'Menunggu';
+    box.innerHTML = '<div class="panel">'+
+      '<div class="riwayat-top" style="margin-bottom:10px;"><span class="nm">'+esc(r['Nama']||'')+'</span>'+
+      '<span class="trip-badge" style="background:'+(STATUS_DIM[status]||'')+';color:'+(STATUS_COLORS[status]||'var(--text)')+';">'+status.toUpperCase()+'</span></div>'+
+      '<div class="trip-row">📍 '+esc(r['Lokasi Awal']||'')+' → '+esc(r['Tujuan']||'')+'</div>'+
+      '<div class="trip-row">🕒 '+esc(r['Tanggal']||'')+' · berangkat '+esc(r['Jam']||'')+' · pulang '+esc(r['Jam Pulang']||'-')+'</div>'+
+      (r['Armada Assigned'] ?
+        '<div class="trip-row">🚐 Mobil: <b style="color:var(--text)">'+esc(r['Armada Assigned'])+'</b></div>'+
+        '<div class="trip-row">🧑‍✈️ Driver: <b style="color:var(--text)">'+esc(r['Driver']||'-')+'</b></div>'
+        : '<div class="trip-row">Belum ada armada & driver yang ditugaskan.</div>')+
+    '</div>';
+  }
+
+  function normalizePhone(raw){
+    let digits = String(raw||'').replace(/\D/g,'');
+    if(digits.startsWith('0')) digits = '62' + digits.slice(1);
+    else if(digits.startsWith('8')) digits = '62' + digits;
+    return digits;
+  }
+
+  function notifyRequester(ticket){
+    const r = (STATE.requests||[]).find(req=>req['Ticket ID']===ticket);
+    if(!r || !r['Kontak']){ showToast('Nomor kontak requester tidak ditemukan', 'error'); return; }
+    const msg = 'Halo '+r['Nama']+', request kendaraan Anda (tiket '+ticket+') sudah dijadwalkan.\n\n'+
+      'Mobil : '+(r['Armada Assigned']||'-')+'\n'+
+      'Driver: '+(r['Driver']||'-')+'\n'+
+      'Jadwal: '+r['Tanggal']+' jam '+r['Jam']+' (pulang '+(r['Jam Pulang']||'-')+')\n'+
+      'Jemput: '+r['Lokasi Awal']+'\n\n'+
+      'Silakan koordinasi langsung dengan driver di atas. Terima kasih.';
+    const phone = normalizePhone(r['Kontak']);
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg), '_blank');
+  }
+
+  /* ======================= INTERACTIONS ======================= */
+  function toggleGroup(status){
+    openGroups[status] = !openGroups[status];
+    renderDispatchBoard();
+  }
+  function toggleAssign(ticket){
+    assignOpenTicket = (assignOpenTicket === ticket) ? null : ticket;
+    renderDispatchBoard();
+  }
+  function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  function confirmAssign(ticket){
+    const armadaKode = document.getElementById('assign-armada-'+ticket).value;
+    const driver = document.getElementById('assign-driver-'+ticket).value.trim();
+    if(!armadaKode || !driver){ showToast('Pilih armada & isi nama driver', 'error'); return; }
+    postAction({
+      action: 'update_status', ticket_id: ticket, status: 'Ditugaskan',
+      armada: armadaKode, driver: driver,
+      armada_kode_untuk_update: armadaKode, armada_status_baru: 'Dipakai'
+    }, 'Trip di-assign ke ' + armadaKode);
+    assignOpenTicket = null;
+  }
+
+  function advanceStatus(ticket, newStatus){
+    const req = (STATE.requests||[]).find(r=>r['Ticket ID']===ticket);
+    const payload = { action:'update_status', ticket_id: ticket, status: newStatus, armada: req?req['Armada Assigned']:'', driver: req?req['Driver']:'' };
+    if(newStatus === 'Selesai' && req && req['Armada Assigned']){
+      payload.armada_kode_untuk_update = req['Armada Assigned'];
+      payload.armada_status_baru = 'Tersedia';
+    }
+    postAction(payload, 'Status diperbarui ke ' + newStatus);
+  }
+
+  async function postAction(payload, successMsg){
+    try{
+      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      showToast('✓ ' + successMsg, 'success');
+      setTimeout(loadData, 900);
+    }catch(err){
+      showToast('Gagal update. Cek koneksi.', 'error');
+    }
+  }
+
+  /* ======================= FORM ======================= */
+  function setupToggleGroup(id){
+    document.getElementById(id).querySelectorAll('.toggle-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        btn.parentElement.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  }
+  setupToggleGroup('f-tipe-group');
+  function getToggleValue(id){ const a = document.querySelector('#'+id+' .toggle-btn.active'); return a ? a.dataset.value : ''; }
+  function stepQty(delta){
+    const input = document.getElementById('f-jumlah');
+    let val = parseInt(input.value,10) || 1;
+    val = Math.max(1, Math.min(40, val+delta));
+    input.value = val;
+  }
+
+  async function submitRequest(){
+    const ids = ['f-nama','f-departemen','f-kontak','f-tanggal','f-jam','f-jam-pulang','f-lokasi','f-tujuan','f-keperluan'];
+    let valid = true;
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      const bad = !el.value.trim();
+      el.closest('.field').classList.toggle('invalid', bad);
+      if(bad) valid = false;
+    });
+    const tipe = getToggleValue('f-tipe-group');
+    if(!tipe) valid = false;
+    if(!valid){ showToast('Lengkapi field yang wajib diisi', 'error'); return; }
+
+    const ticketId = 'TRX-' + Date.now().toString().slice(-6);
+    const namaVal = document.getElementById('f-nama').value.trim();
+    const departemenVal = document.getElementById('f-departemen').value.trim();
+    const tanggalVal = document.getElementById('f-tanggal').value;
+    const jamVal = document.getElementById('f-jam').value;
+    const jamPulangVal = document.getElementById('f-jam-pulang').value;
+    const lokasiVal = document.getElementById('f-lokasi').value.trim();
+    const tujuanVal = document.getElementById('f-tujuan').value.trim();
+    const keperluanVal = document.getElementById('f-keperluan').value.trim();
+
+    const payload = {
+      action: 'new_request', ticket_id: ticketId,
+      nama: namaVal,
+      departemen: departemenVal,
+      kontak: document.getElementById('f-kontak').value.trim(),
+      tanggal_pakai: tanggalVal,
+      jam_pakai: jamVal,
+      jam_pulang: jamPulangVal,
+      tipe_perjalanan: tipe,
+      lokasi_awal: lokasiVal,
+      tujuan: tujuanVal,
+      keperluan: keperluanVal,
+      jenis_kendaraan: 'Mobil Operasional',
+      jumlah_penumpang: document.getElementById('f-jumlah').value,
+      catatan: document.getElementById('f-catatan').value.trim(),
+      pic_emails: PIC_LIST.map(p=>p.email).join(',')
+    };
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Mengirim…';
+    try{
+      const controller = new AbortController();
+      const timeoutId = setTimeout(()=>controller.abort(), 25000);
+      await fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload), signal: controller.signal });
+      clearTimeout(timeoutId);
+      showSuccessPanel(ticketId, { nama: namaVal, departemen: departemenVal, tanggal: tanggalVal, jam: jamVal, jamPulang: jamPulangVal, lokasi: lokasiVal, tujuan: tujuanVal, keperluan: keperluanVal });
+      resetForm();
+      loadData();
+    }catch(err){
+      showToast(err.name==='AbortError' ? 'Timeout. Coba lagi!' : 'Gagal mengirim.', 'error');
+    }finally{
+      btn.disabled = false;
+      btn.innerHTML = 'Kirim Request';
+    }
+  }
+
+  function showSuccessPanel(ticketId, info){
+    document.getElementById('success-ticket').textContent = ticketId;
+    const waMessageBase = 'Halo {name}, ada request kendaraan operasional baru.\n\n' +
+      'Tiket: ' + ticketId + '\n' +
+      'Pemohon: ' + info.nama + ' (' + info.departemen + ')\n' +
+      'Tanggal: ' + info.tanggal + ' jam ' + info.jam + ' (pulang ' + info.jamPulang + ')\n' +
+      'Rute: ' + info.lokasi + ' -> ' + info.tujuan + '\n' +
+      'Keperluan: ' + info.keperluan + '\n\n' +
+      'Mohon dijadwalkan ya. Terima kasih.';
+
+    const box = document.getElementById('success-wa-buttons');
+    box.innerHTML = PIC_LIST.map(pic=>{
+      const msg = waMessageBase.replace('{name}', pic.name);
+      const url = 'https://wa.me/' + pic.phone + '?text=' + encodeURIComponent(msg);
+      return '<a class="btn-wa" href="'+url+'" target="_blank" rel="noopener">💬 Kirim WhatsApp ke '+esc(pic.name)+'</a>';
+    }).join('');
+
+    goTo('success');
+  }
+
+  function finishSuccess(){
+    goTo('dashboard');
+  }
+
+  function resetForm(){
+    ['f-nama','f-departemen','f-kontak','f-tanggal','f-jam','f-jam-pulang','f-lokasi','f-tujuan','f-keperluan','f-catatan'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-jumlah').value = '1';
+    document.querySelectorAll('.toggle-btn.active').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.field.invalid').forEach(f=>f.classList.remove('invalid'));
+  }
+
+  function showToast(msg, type){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + (type||'');
+    setTimeout(()=>{ t.className = t.className.replace('show',''); }, 3000);
+  }
+
+  /* ======================= INIT ======================= */
+  loadData();
+  setInterval(loadData, 20000);
+</script>
+</body>
+</html>
