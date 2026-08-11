@@ -616,7 +616,12 @@
         const available = (STATE.armada||[]).filter(a=>a['Status']==='Tersedia');
         actions += '<div class="assign-box">'+
           '<select id="assign-armada-'+ticket+'">'+
-            (available.length? available.map(a=>'<option value="'+esc(a['Kode'])+'">'+esc(a['No Polisi']||a['Kode'])+' — '+esc(a['Jenis']||'')+'</option>').join('') : '<option value="">Tidak ada armada tersedia</option>')+
+            (available.length? available.map(a=>{
+              const nopol = a['No Polisi'] || a['No. Polisi'] || a['Plat'] || '';
+              const jenis = a['Jenis'] || '';
+              const label = (nopol ? esc(nopol) : esc(a['Kode'])) + (jenis ? ' — ' + esc(jenis) : '') + (nopol && a['Kode'] ? ' (' + esc(a['Kode']) + ')' : '');
+              return '<option value="'+esc(a['Kode'])+'">'+label+'</option>';
+            }).join('') : '<option value="">Tidak ada armada tersedia</option>')+
           '</select>'+
           '<input type="text" id="assign-driver-'+ticket+'" placeholder="Nama driver">'+
           '<button onclick="confirmAssign(\''+ticket+'\')">Konfirmasi Assign</button>'+
