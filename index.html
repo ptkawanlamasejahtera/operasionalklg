@@ -267,7 +267,7 @@
   </div>
 
   <!-- ================= DASHBOARD ================= -->
-  <div class="view active" id="view-dashboard">
+  <div class="view" id="view-dashboard">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon orange">📋</div>
@@ -310,7 +310,7 @@
   </div>
 
   <!-- ================= REQUEST FORM ================= -->
-  <div class="view" id="view-request">
+  <div class="view active" id="view-request">
     <div class="form-card">
       <div class="field">
         <label>Nama Requester <span class="req">*</span></label>
@@ -440,14 +440,7 @@
 
 </div>
 
-<div class="bottomnav">
-  <button class="nav-btn active" data-view="dashboard" onclick="goTo('dashboard')"><span class="ic">📊</span>Dashboard</button>
-  <button class="nav-btn" data-view="request" onclick="goTo('request')"><span class="ic">➕</span>Request Baru</button>
-  <button class="nav-btn" data-view="status" onclick="goTo('status')"><span class="ic">🔍</span>Cek Status</button>
-  <button class="nav-btn" data-view="riwayat" onclick="goTo('riwayat')"><span class="ic">🕘</span>Riwayat</button>
-  <button class="nav-btn" data-view="fleet" onclick="goTo('fleet')"><span class="ic">🗺️</span>Papan Fleet</button>
-  <button class="nav-btn" data-view="armada" onclick="goTo('armada')"><span class="ic">🚙</span>Armada&nbsp;&amp;&nbsp;Driver</button>
-</div>
+<div class="bottomnav" id="bottomnav"></div>
 
 <iframe name="hidden-submit-frame" style="display:none;"></iframe>
 <form id="hidden-submit-form" method="POST" target="hidden-submit-frame" style="display:none;">
@@ -496,8 +489,62 @@
   };
   const STATUS_ORDER = ['Menunggu','Ditugaskan','Berjalan','Selesai'];
 
+  /* ======================= PIC ACCESS GATE ======================= */
+  const PIC_PIN = 'KLG328';
+  const PIC_ONLY_VIEWS = ['dashboard','riwayat','fleet','armada'];
+  let picUnlocked = (localStorage.getItem('pic_unlocked') === 'true');
+
+  function renderNav(){
+    const nav = document.getElementById('bottomnav');
+    if(picUnlocked){
+      nav.innerHTML =
+        '<button class="nav-btn" data-view="dashboard" onclick="goTo(\'dashboard\')"><span class="ic">📊</span>Dashboard</button>'+
+        '<button class="nav-btn" data-view="request" onclick="goTo(\'request\')"><span class="ic">➕</span>Request Baru</button>'+
+        '<button class="nav-btn" data-view="status" onclick="goTo(\'status\')"><span class="ic">🔍</span>Cek Status</button>'+
+        '<button class="nav-btn" data-view="riwayat" onclick="goTo(\'riwayat\')"><span class="ic">🕘</span>Riwayat</button>'+
+        '<button class="nav-btn" data-view="fleet" onclick="goTo(\'fleet\')"><span class="ic">🗺️</span>Papan Fleet</button>'+
+        '<button class="nav-btn" data-view="armada" onclick="goTo(\'armada\')"><span class="ic">🚙</span>Armada&nbsp;&amp;&nbsp;Driver</button>'+
+        '<button class="nav-btn" onclick="lockPIC()"><span class="ic">🔓</span>Keluar PIC</button>';
+    } else {
+      nav.innerHTML =
+        '<button class="nav-btn" data-view="request" onclick="goTo(\'request\')"><span class="ic">➕</span>Request Baru</button>'+
+        '<button class="nav-btn" data-view="status" onclick="goTo(\'status\')"><span class="ic">🔍</span>Cek Status</button>'+
+        '<button class="nav-btn" onclick="unlockPIC()"><span class="ic">🔒</span>Login PIC</button>';
+    }
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===currentView));
+  }
+
+  function unlockPIC(){
+    const input = window.prompt('Masukkan PIN PIC:');
+    if(input === null) return;
+    if(input.trim() === PIC_PIN){
+      picUnlocked = true;
+      localStorage.setItem('pic_unlocked', 'true');
+      renderNav();
+      showToast('✓ Login PIC berhasil', 'success');
+      goTo('dashboard');
+    } else {
+      showToast('PIN salah', 'error');
+    }
+  }
+
+  function lockPIC(){
+    picUnlocked = false;
+    localStorage.removeItem('pic_unlocked');
+    renderNav();
+    showToast('Keluar dari mode PIC', 'success');
+    goTo('request');
+  }
+
   /* ======================= NAV ======================= */
+  let currentView = 'request';
   function goTo(view){
+    if(PIC_ONLY_VIEWS.includes(view) && !picUnlocked){
+      unlockPIC();
+      if(!picUnlocked) return;
+      view = 'dashboard';
+    }
+    currentView = view;
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     document.getElementById('view-'+view).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
@@ -873,7 +920,7 @@
   }
 
   function finishSuccess(){
-    goTo('dashboard');
+    goTo(picUnlocked ? 'dashboard' : 'request');
   }
 
   function resetForm(){
@@ -891,6 +938,8 @@
   }
 
   /* ======================= INIT ======================= */
+  renderNav();
+  if(picUnlocked){ goTo('dashboard'); } else { goTo('request'); }
   loadData();
   setInterval(loadData, 20000);
 </script>
