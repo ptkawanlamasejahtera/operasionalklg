@@ -491,7 +491,7 @@
 
   /* ======================= PIC ACCESS GATE ======================= */
   const PIC_PIN = 'KLG328';
-  const PIC_ONLY_VIEWS = ['dashboard','riwayat','fleet','armada'];
+  const PIC_ONLY_VIEWS = ['dashboard','riwayat','armada'];
   let picUnlocked = (localStorage.getItem('pic_unlocked') === 'true');
 
   function renderNav(){
@@ -509,6 +509,7 @@
       nav.innerHTML =
         '<button class="nav-btn" data-view="request" onclick="goTo(\'request\')"><span class="ic">➕</span>Request Baru</button>'+
         '<button class="nav-btn" data-view="status" onclick="goTo(\'status\')"><span class="ic">🔍</span>Cek Status</button>'+
+        '<button class="nav-btn" data-view="fleet" onclick="goTo(\'fleet\')"><span class="ic">🗺️</span>Armada</button>'+
         '<button class="nav-btn" onclick="unlockPIC()"><span class="ic">🔒</span>Login PIC</button>';
     }
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===currentView));
