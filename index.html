@@ -539,6 +539,8 @@
 
   /* ======================= NAV ======================= */
   let currentView = 'request';
+  let lastLoadAt = 0;
+  const DATA_VIEWS = ['dashboard','status','riwayat','fleet','armada'];
   function goTo(view){
     if(PIC_ONLY_VIEWS.includes(view) && !picUnlocked){
       unlockPIC();
@@ -550,10 +552,14 @@
     document.getElementById('view-'+view).classList.add('active');
     document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
     window.scrollTo(0,0);
+    if(DATA_VIEWS.includes(view) && (Date.now() - lastLoadAt > 3000)){
+      loadData();
+    }
   }
 
   /* ======================= JSONP LOAD ======================= */
   function loadData(){
+    lastLoadAt = Date.now();
     const cbName = 'jsonpCb_' + Date.now();
     window[cbName] = function(data){
       STATE = data;
