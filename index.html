@@ -268,6 +268,10 @@
 
   <!-- ================= DASHBOARD ================= -->
   <div class="view" id="view-dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;">
+      <span id="last-updated" style="font-size:11px;color:var(--text-faint);">Memuat data…</span>
+      <button onclick="loadData(true)" style="background:var(--card-2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;" id="refresh-btn">🔄 Refresh</button>
+    </div>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon orange">📋</div>
@@ -558,19 +562,28 @@
   }
 
   /* ======================= JSONP LOAD ======================= */
-  function loadData(){
+  function loadData(manual){
     lastLoadAt = Date.now();
+    const btn = document.getElementById('refresh-btn');
+    const statusEl = document.getElementById('last-updated');
+    if(manual && btn){ btn.disabled = true; btn.innerHTML = '⏳ Memuat…'; }
+    if(statusEl){ statusEl.textContent = 'Memuat data…'; }
+
     const cbName = 'jsonpCb_' + Date.now();
     window[cbName] = function(data){
       STATE = data;
       renderAll();
       delete window[cbName];
       script.remove();
+      if(btn){ btn.disabled = false; btn.innerHTML = '🔄 Refresh'; }
+      if(statusEl){ statusEl.textContent = 'Update terakhir: ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
     };
     const script = document.createElement('script');
     script.src = SCRIPT_URL + '?callback=' + cbName;
     script.onerror = function(){
       document.querySelectorAll('.loading-row').forEach(el=>el.textContent = 'Gagal memuat data. Cek koneksi.');
+      if(btn){ btn.disabled = false; btn.innerHTML = '🔄 Refresh'; }
+      if(statusEl){ statusEl.textContent = 'Gagal update. Coba refresh lagi.'; }
     };
     document.body.appendChild(script);
   }
@@ -948,7 +961,7 @@
   renderNav();
   if(picUnlocked){ goTo('dashboard'); } else { goTo('request'); }
   loadData();
-  setInterval(loadData, 20000);
+  setInterval(loadData, 8000);
 </script>
 </body>
 </html>
