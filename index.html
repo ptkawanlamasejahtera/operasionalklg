@@ -476,7 +476,7 @@
   }
 
   let STATE = { requests: [], armada: [] };
-  let openGroups = { 'Menunggu': true, 'Ditugaskan': false, 'Berjalan': false, 'Selesai': false };
+  let openGroups = { 'Menunggu': true, 'Ditugaskan': true, 'Berjalan': true, 'Selesai': true };
   let assignOpenTicket = null;
 
   const STATUS_COLORS = {
@@ -962,6 +962,17 @@
   if(picUnlocked){ goTo('dashboard'); } else { goTo('request'); }
   loadData();
   setInterval(loadData, 8000);
+
+  // Browser mobile sering "membekukan" timer setInterval saat tab di-background.
+  // Begitu tab/app aktif lagi, langsung tarik data terbaru tanpa perlu refresh manual.
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      loadData();
+    }
+  });
+  window.addEventListener('focus', function(){
+    loadData();
+  });
 </script>
 </body>
 </html>
