@@ -709,7 +709,7 @@
       '<div class="trip-row">📍 '+esc(r['Lokasi Awal']||'')+' → '+esc(r['Tujuan']||'')+'</div>'+
       '<div class="trip-row">🕒 '+esc(r['Tanggal']||'')+' · berangkat '+esc(r['Jam']||'')+' · pulang '+esc(r['Jam Pulang']||'-')+'</div>'+
       '<div class="trip-row">👥 '+esc(r['Jumlah Penumpang']||'')+' penumpang · '+esc(r['Jenis Kendaraan']||'')+'</div>'+
-      (r['Armada Assigned'] ? '<div class="trip-row">🚐 '+esc(r['Armada Assigned'])+(r['Driver']?' · '+esc(r['Driver']):'')+'</div>' : '')+
+      (r['Armada Assigned'] ? '<div class="trip-row">🚐 '+esc(getArmadaLabel(r['Armada Assigned']))+(r['Driver']?' · '+esc(r['Driver']):'')+'</div>' : '')+
       actions+
     '</div>';
   }
@@ -771,7 +771,7 @@
       '<div class="trip-row">📍 '+esc(r['Lokasi Awal']||'')+' → '+esc(r['Tujuan']||'')+'</div>'+
       '<div class="trip-row">🕒 '+esc(r['Tanggal']||'')+' · berangkat '+esc(r['Jam']||'')+' · pulang '+esc(r['Jam Pulang']||'-')+'</div>'+
       (r['Armada Assigned'] ?
-        '<div class="trip-row">🚐 Mobil: <b style="color:var(--text)">'+esc(r['Armada Assigned'])+'</b></div>'+
+        '<div class="trip-row">🚐 Mobil: <b style="color:var(--text)">'+esc(getArmadaLabel(r['Armada Assigned']))+'</b></div>'+
         '<div class="trip-row">🧑‍✈️ Driver: <b style="color:var(--text)">'+esc(r['Driver']||'-')+'</b></div>'
         : '<div class="trip-row">Belum ada armada & driver yang ditugaskan.</div>')+
     '</div>';
@@ -788,7 +788,7 @@
     const r = (STATE.requests||[]).find(req=>req['Ticket ID']===ticket);
     if(!r || !r['Kontak']){ showToast('Nomor kontak requester tidak ditemukan', 'error'); return; }
     const msg = 'Halo '+r['Nama']+', request kendaraan Anda (tiket '+ticket+') sudah dijadwalkan.\n\n'+
-      'Mobil : '+(r['Armada Assigned']||'-')+'\n'+
+      'Mobil : '+getArmadaLabel(r['Armada Assigned'])+'\n'+
       'Driver: '+(r['Driver']||'-')+'\n'+
       'Jadwal: '+r['Tanggal']+' jam '+r['Jam']+' (pulang '+(r['Jam Pulang']||'-')+')\n'+
       'Jemput: '+r['Lokasi Awal']+'\n\n'+
@@ -807,6 +807,16 @@
     renderDispatchBoard();
   }
   function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  /** Cari data lengkap armada dari kode-nya, kembalikan label "Nopol (Kode) — Jenis" */
+  function getArmadaLabel(kode){
+    if(!kode) return '-';
+    const a = (STATE.armada||[]).find(x => x['Kode'] === kode);
+    if(!a) return kode;
+    const nopol = a['No Polisi'] || a['No. Polisi'] || a['Plat'] || '';
+    const jenis = a['Jenis'] || '';
+    return (nopol ? nopol+' ('+kode+')' : kode) + (jenis ? ' — '+jenis : '');
+  }
 
   function confirmAssign(ticket){
     const armadaKode = document.getElementById('assign-armada-'+ticket).value;
