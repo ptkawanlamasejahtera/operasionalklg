@@ -562,30 +562,59 @@
   }
 
   /* ======================= JSONP LOAD ======================= */
-  function loadData(manual){
+  let isLoadingData = false;
+  function loadData(manual, isRetry){
+    if(isLoadingData && !manual) return; // hindari request numpuk/tabrakan
+    isLoadingData = true;
     lastLoadAt = Date.now();
     const btn = document.getElementById('refresh-btn');
     const statusEl = document.getElementById('last-updated');
     if(manual && btn){ btn.disabled = true; btn.innerHTML = '⏳ Memuat…'; }
-    if(statusEl){ statusEl.textContent = 'Memuat data…'; }
+    if(statusEl && !isRetry){ statusEl.textContent = 'Memuat data…'; }
 
+    let settled = false;
     const cbName = 'jsonpCb_' + Date.now();
+    const timeoutId = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
+      handleFail();
+    }, 12000);
+
     window[cbName] = function(data){
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       STATE = data;
+      STATE.armada = normalizeArmadaList(STATE.armada);
       renderAll();
       delete window[cbName];
       script.remove();
+      isLoadingData = false;
       if(btn){ btn.disabled = false; btn.innerHTML = '🔄 Refresh'; }
       if(statusEl){ statusEl.textContent = 'Update terakhir: ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
     };
     const script = document.createElement('script');
     script.src = SCRIPT_URL + '?callback=' + cbName;
     script.onerror = function(){
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      handleFail();
+    };
+    document.body.appendChild(script);
+
+    function handleFail(){
+      isLoadingData = false;
+      try{ delete window[cbName]; script.remove(); }catch(e){}
+      if(!isRetry){
+        // Coba sekali lagi otomatis sebelum lapor gagal ke user (network mobile suka putus sesaat)
+        setTimeout(()=>loadData(manual, true), 1500);
+        return;
+      }
       document.querySelectorAll('.loading-row').forEach(el=>el.textContent = 'Gagal memuat data. Cek koneksi.');
       if(btn){ btn.disabled = false; btn.innerHTML = '🔄 Refresh'; }
       if(statusEl){ statusEl.textContent = 'Gagal update. Coba refresh lagi.'; }
-    };
-    document.body.appendChild(script);
+    }
   }
 
   /* ======================= RENDER ======================= */
@@ -806,6 +835,25 @@
     assignOpenTicket = (assignOpenTicket === ticket) ? null : ticket;
     renderDispatchBoard();
   }
+  /** Normalisasi data armada dari sheet supaya tahan terhadap variasi nama kolom
+   *  (misal 'No Polisi', 'No. Polisi', 'NoPol', 'Plat', dsb) */
+  function normalizeArmadaList(list){
+    return (list||[]).map(a=>{
+      const keys = Object.keys(a);
+      const clean = s => String(s).toLowerCase().replace(/[^a-z]/g,'');
+      const findVal = (patterns) => {
+        const k = keys.find(key => patterns.includes(clean(key)));
+        return k ? a[k] : '';
+      };
+      return {
+        'Kode': findVal(['kode','code']) || '',
+        'Jenis': findVal(['jenis','type','model']) || '',
+        'No Polisi': findVal(['nopolisi','nopol','noplat','platnomor','plat','platnomorkendaraan']) || '',
+        'Status': findVal(['status']) || ''
+      };
+    });
+  }
+
   function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
   /** Cari data lengkap armada dari kode-nya, kembalikan label "Nopol (Kode) — Jenis" */
